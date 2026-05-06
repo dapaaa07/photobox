@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pastel Photobox</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --pink-1: #fdf2f8;
+        --pink-2: #fbcfe8;
+        --pink-3: #f9a8d4;
+        --pink-4: #f472b6;
+        --pink-5: #db2777;
+        --white: #ffffff;
+        --text-dark: #4b5563;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--pink-1) 0%,
+          var(--pink-2) 100%
+        );
+        color: var(--text-dark);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow-x: hidden;
+      }
+      .app-container {
+        background-color: var(--white);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(219, 39, 119, 0.15);
+        padding: 30px;
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+        position: relative;
+      }
+      h1,
+      h2,
+      h3 {
+        color: var(--pink-5);
+        margin-top: 0;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .flex-center {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .btn {
+        font-family: "Poppins", sans-serif;
+        font-weight: 600;
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .btn:active {
+        transform: scale(0.95);
+      }
+      .btn-primary {
+        background-color: var(--pink-4);
+        color: var(--white);
+      }
+      .btn-primary:hover {
+        background-color: var(--pink-5);
+      }
+      .btn-outline {
+        background-color: var(--white);
+        color: var(--pink-5);
+        border: 2px solid var(--pink-4);
+      }
+      .btn-outline:hover {
+        background-color: var(--pink-1);
+      }
+      .btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        border-color: #ccc;
+        color: #666;
+      }
+
+      .camera-wrapper {
+        position: relative;
+        width: 640px;
+        height: 480px;
+        margin: 0 auto 20px auto;
+        border-radius: 16px;
+        overflow: hidden;
+        background-color: #000;
+      }
+      video {
+        transform: scaleX(-1);
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 16px;
+        max-height: 600px;
+      }
+
+      #capture-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 120px;
+        font-weight: 700;
+        color: white;
+        background: rgba(219, 39, 119, 0.3);
+        z-index: 10;
+      }
+      .info-bar {
+        display: flex;
+        justify-content: space-between;
+        background: var(--pink-1);
+        padding: 10px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        color: var(--pink-5);
+        border: 2px dashed var(--pink-3);
+      }
+      .frame-list {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .frame-option {
+        width: 120px;
+        height: 180px;
+        border: 4px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        object-fit: contain;
+        background-color: var(--pink-1);
+      }
+      .frame-option.selected {
+        border-color: var(--pink-5);
+        transform: scale(1.05);
+      }
+      input[type="email"] {
+        padding: 12px;
+        width: 70%;
+        border: 2px solid var(--pink-3);
+        border-radius: 8px;
+        font-family: "Poppins", sans-serif;
+        font-size: 16px;
+        outline: none;
+        text-align: center;
+      }
+      #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .spinner {
+        border: 8px solid var(--pink-2);
+        border-top: 8px solid var(--pink-5);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loader" class="hidden">
+      <div class="spinner"></div>
+      <h3 style="margin-top: 20px" id="loader-text">Memproses...</h3>
+    </div>
+
+    <div class="app-container">
+      <!-- HALAMAN LANDING -->
+      <div id="page-landing">
+        <h1>✨ Pastel Photobox ✨</h1>
+        <p>1 Sesi = 3 Foto.<br />Total waktu sesi: <b>2 Menit</b></p>
+        <button
+          class="btn btn-primary"
+          style="font-size: 20px; padding: 15px 40px; margin-top: 20px"
+          onclick="startSession()"
+        >
+          Mulai Foto
+        </button>
+      </div>
+
+      <!-- HALAMAN KAMERA -->
+      <div id="page-session" class="hidden">
+        <div class="info-bar">
+          <span>Sesi: <span id="session-timer-text">02:00</span></span>
+          <span>Foto: <span id="photo-count">0</span> / 3</span>
+          <span id="action-timer-text"></span>
+        </div>
+
+        <div class="camera-wrapper">
+          <video id="video" autoplay playsinline></video>
+          <img id="preview-img" class="hidden" src="" alt="Preview" />
+          <div id="capture-overlay" class="hidden">5</div>
+        </div>
+
+        <div id="controls-capture" class="flex-center">
+          <button id="btn-capture" class="btn btn-primary">
+            📸 Jepret (5s)
+          </button>
+          <button class="btn btn-outline" onclick="resetApp()">
+            Batal Sesi
+          </button>
+        </div>
+
+        <div id="controls-review" class="flex-center hidden">
+          <button
+            class="btn btn-outline"
+            id="btn-retake"
+            onclick="retakePhoto()"
+          >
+            🔄 Retake
+          </button>
+          <button
+            class="btn btn-primary"
+            id="btn-confirm"
+            onclick="confirmPhoto()"
+          >
+            ✅ Konfirmasi
+          </button>
+        </div>
+      </div>
+
+      <!-- HALAMAN PILIH BINGKAI -->
+      <div id="page-frame" class="hidden">
+        <h2>Pilih Desain Bingkai</h2>
+        <p>
+          Waktu memilih:
+          <span
+            id="frame-timer-text"
+            style="color: var(--pink-5); font-weight: bold"
+            >60</span
+          >
+          detik
+        </p>
+
+        <div class="frame-list">
+          <img
+            src="frame/image_1.png"
+            class="frame-option selected"
+            data-frame="frame/image_1.png"
+            alt="Pastel Miring"
+          />
+          <img
+            src="frame/image_2.png"
+            class="frame-option"
+            data-frame="frame/image_2.png"
+            alt="Tiket Vintage"
+          />
+          <img
+            src="frame/image_3.png"
+            class="frame-option"
+            data-frame="frame/image_3.png"
+            alt="Retro Merah"
+          />
+        </div>
+        <button class="btn btn-primary" onclick="applyFrame()">
+          Gunakan Desain Ini
+        </button>
+      </div>
+
+      <!-- HALAMAN EMAIL & CETAK -->
+      <div id="page-email" class="hidden">
+        <h2>Siap Dicetak!</h2>
+        <p>
+          Waktu mengisi email:
+          <span
+            id="email-timer-text"
+            style="color: var(--pink-5); font-weight: bold"
+            >50</span
+          >
+          detik
+        </p>
+        <div style="margin-bottom: 20px">
+          <input
+            type="email"
+            id="email-input"
+            placeholder="Masukkan Email (Opsional)"
+          />
+        </div>
+        <div class="flex-center">
+          <button class="btn btn-outline" onclick="finishSession(true)">
+            Lewati & Cetak
+          </button>
+          <button class="btn btn-primary" onclick="finishSession(false)">
+            Kirim & Cetak
+          </button>
+        </div>
+      </div>
+
+      <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <script>
+      // =======================================================================
+      // METODE STATIS: PETA KOORDINAT BINGKAI (LIVE EDIT X DAN Y)
+      // =======================================================================
+      const FRAMES_DATA = {
+        "frame/image_1.png": {
+          originalWidth: 375,
+          originalHeight: 666,
+          rotationAngleDeg: 0,
+          slots: [
+            { cX: 187, cY: 120, w: 218, h: 160 },
+            { cX: 187, cY: 276, w: 218, h: 160 },
+            { cX: 187, cY: 440, w: 218, h: 160 },
+          ],
+        },
+        "frame/image_2.png": {
+          originalWidth: 375,
+          originalHeight: 666,
+          rotationAngleDeg: 0,
+          slots: [
+            { cX: 191, cY: 110, w: 218, h: 160 },
+            { cX: 187, cY: 276, w: 218, h: 160 },
+            { cX: 187, cY: 440, w: 218, h: 160 },
+          ],
+        },
+        "frame/image_3.png": {
+          originalWidth: 375,
+          originalHeight: 666,
+          rotationAngleDeg: 0,
+          slots: [
+            { cX: 187, cY: 120, w: 218, h: 160 },
+            { cX: 187, cY: 276, w: 218, h: 160 },
+            { cX: 187, cY: 440, w: 218, h: 160 },
+          ],
+        },
+      };
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const previewImg = document.getElementById("preview-img");
+      const overlay = document.getElementById("capture-overlay");
+      const loader = document.getElementById("loader");
+
+      let photos = [];
+      let tempFilenames = [];
+      const MAX_PHOTOS = 3;
+      let tempPhotoBase64 = null;
+      let selectedFrame = "frame/image_1.png";
+
+      let sessionInterval, actionInterval;
+      let sessionTimeLeft = 120;
+
+      navigator.mediaDevices
+        .getUserMedia({ video: { width: 640, height: 480 } })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((err) => {
+          alert("Mohon izinkan akses kamera!");
+        });
+
+      function showPage(pageId) {
+        document
+          .querySelectorAll('[id^="page-"]')
+          .forEach((p) => p.classList.add("hidden"));
+        document.getElementById(pageId).classList.remove("hidden");
+      }
+
+      function showLoader(text) {
+        document.getElementById("loader-text").innerText = text;
+        loader.classList.remove("hidden");
+      }
+      function hideLoader() {
+        loader.classList.add("hidden");
+      }
+
+      function startSession() {
+        photos = [];
+        tempFilenames = [];
+        sessionTimeLeft = 120;
+        document.getElementById("photo-count").innerText = "0";
+        showPage("page-session");
+        setupCameraView();
+
+        clearInterval(sessionInterval);
+        sessionInterval = setInterval(() => {
+          sessionTimeLeft--;
+          let m = Math.floor(sessionTimeLeft / 60)
+            .toString()
+            .padStart(2, "0");
+          let s = (sessionTimeLeft % 60).toString().padStart(2, "0");
+          document.getElementById("session-timer-text").innerText = `${m}:${s}`;
+
+          if (sessionTimeLeft <= 0) {
+            alert("Waktu sesi foto habis (2 Menit)!");
+            resetApp();
+          }
+        }, 1000);
+      }
+
+      function setupCameraView() {
+        video.classList.remove("hidden");
+        previewImg.classList.add("hidden");
+        document.getElementById("controls-capture").classList.remove("hidden");
+        document.getElementById("controls-review").classList.add("hidden");
+        document.getElementById("btn-capture").disabled = false;
+        clearInterval(actionInterval);
+        document.getElementById("action-timer-text").innerText = "";
+      }
+
+      document.getElementById("btn-capture").addEventListener("click", () => {
+        document.getElementById("btn-capture").disabled = true;
+        overlay.classList.remove("hidden");
+        let countdown = 5;
+        overlay.innerText = countdown;
+
+        let captureTimer = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            overlay.innerText = countdown;
+          } else {
+            clearInterval(captureTimer);
+            overlay.classList.add("hidden");
+            executeCapture();
+          }
+        }, 1000);
+      });
+
+      function executeCapture() {
+        const captureW = 1280,
+          captureH = 960;
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = captureW;
+        tempCanvas.height = captureH;
+        const tCtx = tempCanvas.getContext("2d");
+
+        tCtx.translate(captureW, 0);
+        tCtx.scale(-1, 1);
+        tCtx.drawImage(video, 0, 0, captureW, captureH);
+
+        tempPhotoBase64 = tempCanvas.toDataURL("image/png");
+        previewImg.src = tempPhotoBase64;
+
+        video.classList.add("hidden");
+        previewImg.classList.remove("hidden");
+        document.getElementById("controls-capture").classList.add("hidden");
+        document.getElementById("controls-review").classList.remove("hidden");
+
+        startActionTimer(
+          30,
+          "action-timer-text",
+          () => confirmPhoto(),
+          "Auto-Confirm: ",
+        );
+      }
+
+      function retakePhoto() {
+        setupCameraView();
+      }
+
+      async function confirmPhoto() {
+        clearInterval(actionInterval);
+        document.getElementById("btn-confirm").disabled = true;
+        document.getElementById("btn-retake").disabled = true;
+        showLoader("Menyimpan foto...");
+
+        try {
+          const response = await fetch("process.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "save_temp",
+              image: tempPhotoBase64,
+            }),
+          });
+          const result = await response.json();
+
+          if (result.status === "success") {
+            tempFilenames.push(result.filename);
+            photos.push(tempPhotoBase64);
+
+            document.getElementById("photo-count").innerText = photos.length;
+
+            if (photos.length < MAX_PHOTOS) {
+              setupCameraView();
+            } else {
+              clearInterval(sessionInterval);
+              showPage("page-frame");
+              startActionTimer(60, "frame-timer-text", () => applyFrame(), "");
+            }
+          } else {
+            alert("Server Error: " + result.message);
+            setupCameraView();
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Gagal koneksi ke server php.");
+          setupCameraView();
+        } finally {
+          hideLoader();
+          document.getElementById("btn-confirm").disabled = false;
+          document.getElementById("btn-retake").disabled = false;
+        }
+      }
+
+      document.querySelectorAll(".frame-option").forEach((img) => {
+        img.addEventListener("click", function () {
+          document
+            .querySelectorAll(".frame-option")
+            .forEach((i) => i.classList.remove("selected"));
+          this.classList.add("selected");
+          selectedFrame = this.getAttribute("data-frame");
+        });
+      });
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Gagal load: " + src));
+          img.src = src;
+        });
+      }
+
+      // =======================================================================
+      // LOGIKA PENYATUAN BINGKAI YANG STABIL
+      // =======================================================================
+      async function applyFrame() {
+        clearInterval(actionInterval);
+        showLoader("Menggabungkan desain...");
+
+        try {
+          const config = FRAMES_DATA[selectedFrame];
+          if (!config)
+            throw new Error(
+              "Konfigurasi bingkai tidak ditemukan di FRAMES_DATA!",
+            );
+
+          canvas.width = config.originalWidth;
+          canvas.height = config.originalHeight;
+
+          const frameImgPromise = loadImage(selectedFrame);
+          const photoImgPromises = photos.map((src) => loadImage(src));
+
+          const [frameImg, ...photoImgs] = await Promise.all([
+            frameImgPromise,
+            ...photoImgPromises,
+          ]);
+
+          // =========================================================
+          // 1. BACKGROUND PUTIH (Paling bawah)
+          // Mencegah munculnya kotak bolong checkerboard
+          // =========================================================
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // =========================================================
+          // 2. GAMBAR FOTO JEPRETAN (Layer Tengah)
+          // =========================================================
+          const angleRad = config.rotationAngleDeg * (Math.PI / 180);
+          for (let i = 0; i < photoImgs.length; i++) {
+            const photo = photoImgs[i];
+            const slot = config.slots[i];
+
+            if (photo && slot) {
+              ctx.save();
+              ctx.translate(slot.cX, slot.cY);
+              ctx.rotate(angleRad);
+              ctx.drawImage(photo, -slot.w / 2, -slot.h / 2, slot.w, slot.h);
+              ctx.restore();
+            }
+          }
+
+          // =========================================================
+          // 3. GAMBAR BINGKAI (Layer Paling Atas)
+          // Bingkai PNG transparan ini akan menutupi tepi-tepi foto
+          // =========================================================
+          ctx.drawImage(
+            frameImg,
+            0,
+            0,
+            config.originalWidth,
+            config.originalHeight,
+          );
+
+          const finalImageBase64 = canvas.toDataURL("image/png");
+          previewImg.src = finalImageBase64;
+
+          video.classList.add("hidden");
+          previewImg.classList.remove("hidden");
+          document.querySelector(".camera-wrapper").style.margin = "0 auto";
+          document.querySelector(".camera-wrapper").appendChild(previewImg);
+
+          hideLoader();
+          showPage("page-email");
+          startActionTimer(
+            50,
+            "email-timer-text",
+            () => finishSession(true),
+            "",
+          );
+        } catch (error) {
+          hideLoader();
+          alert("Terjadi kesalahan memproses bingkai: " + error.message);
+          resetApp();
+        }
+      }
+
+      function finishSession(isSkip) {
+        clearInterval(actionInterval);
+        showLoader("Mencetak file...");
+
+        const finalImage = canvas.toDataURL("image/png");
+        const email = isSkip
+          ? ""
+          : document.getElementById("email-input").value;
+
+        fetch("process.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "finalize",
+            image: finalImage,
+            email: email,
+            tempFiles: tempFilenames,
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            hideLoader();
+            if (data.status === "success") {
+              alert("Sukses! File PNG telah dicetak dan tersimpan di server.");
+            } else {
+              alert("Selesai dengan pesan server: " + data.message);
+            }
+            resetApp();
+          })
+          .catch((err) => {
+            hideLoader();
+            alert("Proses Selesai (Pastikan XAMPP/PHP menyala).");
+            resetApp();
+          });
+      }
+
+      function startActionTimer(
+        seconds,
+        elementId,
+        onTimeout,
+        prefixText = "",
+      ) {
+        clearInterval(actionInterval);
+        let timeLeft = seconds;
+        document.getElementById(elementId).innerText = prefixText + timeLeft;
+        actionInterval = setInterval(() => {
+          timeLeft--;
+          document.getElementById(elementId).innerText = prefixText + timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(actionInterval);
+            onTimeout();
+          }
+        }, 1000);
+      }
+
+      function resetApp() {
+        clearInterval(sessionInterval);
+        clearInterval(actionInterval);
+        document.getElementById("email-input").value = "";
+        hideLoader();
+
+        document
+          .getElementById("page-session")
+          .querySelector(".camera-wrapper")
+          .appendChild(previewImg);
+        showPage("page-landing");
+      }
+    </script>
+  </body>
+</html>
