@@ -94,6 +94,7 @@
         color: #666;
       }
 
+      /* Kamera dan Preview ditumpuk absolut */
       .camera-wrapper {
         position: relative;
         width: 640px;
@@ -108,15 +109,21 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1; /* Selalu di bawah */
       }
       #preview-img {
         width: 100%;
         height: 100%;
         object-fit: contain;
-        border-radius: 16px;
-        max-height: 600px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2; /* Menutupi kamera saat ditampilkan */
+        background-color: #000;
       }
-
       #capture-overlay {
         position: absolute;
         top: 0;
@@ -212,7 +219,6 @@
     </div>
 
     <div class="app-container">
-      <!-- HALAMAN LANDING -->
       <div id="page-landing">
         <h1>✨ Pastel Photobox ✨</h1>
         <p>1 Sesi = 3 Foto.<br />Total waktu sesi: <b>2 Menit</b></p>
@@ -225,7 +231,6 @@
         </button>
       </div>
 
-      <!-- HALAMAN KAMERA -->
       <div id="page-session" class="hidden">
         <div class="info-bar">
           <span>Sesi: <span id="session-timer-text">02:00</span></span>
@@ -236,12 +241,12 @@
         <div class="camera-wrapper">
           <video id="video" autoplay playsinline></video>
           <img id="preview-img" class="hidden" src="" alt="Preview" />
-          <div id="capture-overlay" class="hidden">5</div>
+          <div id="capture-overlay" class="hidden">3</div>
         </div>
 
         <div id="controls-capture" class="flex-center">
           <button id="btn-capture" class="btn btn-primary">
-            📸 Jepret (5s)
+            📸 Jepret (3s)
           </button>
           <button class="btn btn-outline" onclick="resetApp()">
             Batal Sesi
@@ -266,7 +271,6 @@
         </div>
       </div>
 
-      <!-- HALAMAN PILIH BINGKAI -->
       <div id="page-frame" class="hidden">
         <h2>Pilih Desain Bingkai</h2>
         <p>
@@ -284,19 +288,19 @@
             src="frame/image_1.png"
             class="frame-option selected"
             data-frame="frame/image_1.png"
-            alt="Pastel Miring"
+            alt="Frame 1"
           />
           <img
             src="frame/image_2.png"
             class="frame-option"
             data-frame="frame/image_2.png"
-            alt="Tiket Vintage"
+            alt="Frame 2"
           />
           <img
             src="frame/image_3.png"
             class="frame-option"
             data-frame="frame/image_3.png"
-            alt="Retro Merah"
+            alt="Frame 3"
           />
         </div>
         <button class="btn btn-primary" onclick="applyFrame()">
@@ -304,7 +308,6 @@
         </button>
       </div>
 
-      <!-- HALAMAN EMAIL & CETAK -->
       <div id="page-email" class="hidden">
         <h2>Siap Dicetak!</h2>
         <p>
@@ -337,18 +340,15 @@
     </div>
 
     <script>
-      // =======================================================================
-      // METODE STATIS: PETA KOORDINAT BINGKAI (LIVE EDIT X DAN Y)
-      // =======================================================================
       const FRAMES_DATA = {
         "frame/image_1.png": {
           originalWidth: 375,
           originalHeight: 666,
           rotationAngleDeg: 0,
           slots: [
-            { cX: 187, cY: 120, w: 218, h: 160 },
-            { cX: 187, cY: 276, w: 218, h: 160 },
-            { cX: 187, cY: 440, w: 218, h: 160 },
+            { cX: 193, cY: 95, w: 225, h: 175 },
+            { cX: 193, cY: 283, w: 225, h: 175 },
+            { cX: 193, cY: 471, w: 225, h: 175 },
           ],
         },
         "frame/image_2.png": {
@@ -356,9 +356,9 @@
           originalHeight: 666,
           rotationAngleDeg: 0,
           slots: [
-            { cX: 191, cY: 110, w: 218, h: 160 },
-            { cX: 187, cY: 276, w: 218, h: 160 },
-            { cX: 187, cY: 440, w: 218, h: 160 },
+            { cX: 195, cY: 102, w: 222, h: 175 },
+            { cX: 191, cY: 287, w: 222, h: 175 },
+            { cX: 193, cY: 466, w: 222, h: 175 },
           ],
         },
         "frame/image_3.png": {
@@ -393,6 +393,7 @@
         .getUserMedia({ video: { width: 640, height: 480 } })
         .then((stream) => {
           video.srcObject = stream;
+          video.play();
         })
         .catch((err) => {
           alert("Mohon izinkan akses kamera!");
@@ -438,7 +439,7 @@
       }
 
       function setupCameraView() {
-        video.classList.remove("hidden");
+        // Hanya preview yang disembunyikan, video kamera tetap menyala di layer bawah
         previewImg.classList.add("hidden");
         document.getElementById("controls-capture").classList.remove("hidden");
         document.getElementById("controls-review").classList.add("hidden");
@@ -450,7 +451,7 @@
       document.getElementById("btn-capture").addEventListener("click", () => {
         document.getElementById("btn-capture").disabled = true;
         overlay.classList.remove("hidden");
-        let countdown = 5;
+        let countdown = 3; // Timer diubah menjadi 3 detik
         overlay.innerText = countdown;
 
         let captureTimer = setInterval(() => {
@@ -480,7 +481,7 @@
         tempPhotoBase64 = tempCanvas.toDataURL("image/png");
         previewImg.src = tempPhotoBase64;
 
-        video.classList.add("hidden");
+        // Tampilkan hasil jepretan menumpuk di atas kamera
         previewImg.classList.remove("hidden");
         document.getElementById("controls-capture").classList.add("hidden");
         document.getElementById("controls-review").classList.remove("hidden");
@@ -562,9 +563,6 @@
         });
       }
 
-      // =======================================================================
-      // LOGIKA PENYATUAN BINGKAI YANG STABIL
-      // =======================================================================
       async function applyFrame() {
         clearInterval(actionInterval);
         showLoader("Menggabungkan desain...");
@@ -587,16 +585,11 @@
             ...photoImgPromises,
           ]);
 
-          // =========================================================
-          // 1. BACKGROUND PUTIH (Paling bawah)
-          // Mencegah munculnya kotak bolong checkerboard
-          // =========================================================
+          // Layer 1: Background Putih Solid
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // =========================================================
-          // 2. GAMBAR FOTO JEPRETAN (Layer Tengah)
-          // =========================================================
+          // Layer 2: Foto Jepretan
           const angleRad = config.rotationAngleDeg * (Math.PI / 180);
           for (let i = 0; i < photoImgs.length; i++) {
             const photo = photoImgs[i];
@@ -611,10 +604,7 @@
             }
           }
 
-          // =========================================================
-          // 3. GAMBAR BINGKAI (Layer Paling Atas)
-          // Bingkai PNG transparan ini akan menutupi tepi-tepi foto
-          // =========================================================
+          // Layer 3: Bingkai PNG Transparan
           ctx.drawImage(
             frameImg,
             0,
@@ -626,7 +616,6 @@
           const finalImageBase64 = canvas.toDataURL("image/png");
           previewImg.src = finalImageBase64;
 
-          video.classList.add("hidden");
           previewImg.classList.remove("hidden");
           document.querySelector(".camera-wrapper").style.margin = "0 auto";
           document.querySelector(".camera-wrapper").appendChild(previewImg);

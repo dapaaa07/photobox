@@ -18,11 +18,11 @@ if ($action === 'save_temp') {
     if (isset($data['image'])) {
         $image_parts = explode(";base64,", $data['image']);
         if (count($image_parts) < 2) {
-             echo json_encode(["status" => "error", "message" => "Format base64 salah."]);
-             exit;
+            echo json_encode(["status" => "error", "message" => "Format base64 salah."]);
+            exit;
         }
         $image_base64 = base64_decode($image_parts[1]);
-        
+
         // Buat folder images jika belum ada
         if (!file_exists('images')) {
             mkdir('images', 0777, true);
@@ -38,18 +38,17 @@ if ($action === 'save_temp') {
             echo json_encode(["status" => "error", "message" => "Gagal menyimpan foto ke folder images."]);
         }
     }
-} 
+}
 
 // ====================================================================
-// AKSI 2: FINALISASI (CETAK & EMAIL) - TANPA HAPUS OTOMATIS
+// AKSI 2: FINALISASI (CETAK, EMAIL, & HAPUS OTOMATIS)
 // ====================================================================
 elseif ($action === 'finalize') {
     if (isset($data['image'])) {
         $image_parts = explode(";base64,", $data['image']);
         $image_base64 = base64_decode($image_parts[1]);
         $email = isset($data['email']) ? $data['email'] : '';
-        
-        // Variabel $tempFiles tidak lagi diproses untuk dihapus
+        $tempFiles = isset($data['tempFiles']) ? $data['tempFiles'] : [];
 
         // 1. Simpan gambar FINAL dalam format PNG (Siap Cetak)
         $finalName = 'cetak_' . date('Y-m-d_H-i-s') . '.png';
@@ -80,11 +79,20 @@ elseif ($action === 'finalize') {
             @mail($email, $subject, $body, $headers);
         }
 
-        // --- BAGIAN PENGHAPUSAN OTOMATIS TELAH DIHILANGKAN ---
+        // =========================================================
+        // 3. LOGIKA HAPUS OTOMATIS (DIKEMBALIKAN)
+        // Menghapus file-file sementara (temp_*.png) dari folder images
+        // =========================================================
+        foreach ($tempFiles as $file) {
+            $file = basename($file); // Keamanan: hindari direktori traversal (seperti ../../)
+            $path = __DIR__ . '/images/' . $file;
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
 
-        echo json_encode(["status" => "success", "message" => "Cetak selesai! Foto mentah tetap aman tersimpan di folder images."]);
+        echo json_encode(["status" => "success", "message" => "Cetak selesai! Foto mentah telah dihapus otomatis dari server."]);
     }
 } else {
     echo json_encode(["status" => "error", "message" => "Aksi tidak dikenal."]);
 }
-?>
